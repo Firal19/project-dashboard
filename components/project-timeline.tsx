@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { ProjectRow } from "@/components/project-row"
+import { projects } from "@/lib/data/projects"
 import {
   CaretLeft,
   CaretRight,
@@ -26,103 +27,7 @@ interface ProjectTimelineProps {
   viewOptions: ViewOptions
 }
 
-const projects = [
-  {
-    id: "1",
-    name: "Fintech Mobile App Redesign",
-    taskCount: 4,
-    progress: 80,
-    startDate: new Date(2025, 9, 25),
-    endDate: new Date(2025, 10, 7),
-    tasks: [
-      {
-        id: "1-1",
-        name: "Brainstorm, IA",
-        assignee: "JD",
-        status: "done" as const,
-        startDate: new Date(2025, 9, 25),
-        endDate: new Date(2025, 10, 7),
-      },
-      {
-        id: "1-2",
-        name: "Wireframe layout",
-        assignee: "JD",
-        status: "todo" as const,
-        startDate: new Date(2025, 9, 25),
-        endDate: new Date(2025, 10, 7),
-      },
-      {
-        id: "1-3",
-        name: "Demo 3 concept",
-        assignee: "JD",
-        status: "todo" as const,
-        startDate: new Date(2025, 9, 25),
-        endDate: new Date(2025, 10, 7),
-      },
-      {
-        id: "1-4",
-        name: "UI Other screens",
-        assignee: "JD",
-        status: "todo" as const,
-        startDate: new Date(2025, 9, 25),
-        endDate: new Date(2025, 10, 7),
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Internal PM System",
-    taskCount: 8,
-    progress: 45,
-    startDate: new Date(2025, 9, 25),
-    endDate: new Date(2025, 10, 7),
-    tasks: [],
-  },
-  {
-    id: "3",
-    name: "AI Learning Platform",
-    taskCount: 2,
-    progress: 70,
-    startDate: new Date(2025, 9, 25),
-    endDate: new Date(2025, 10, 7),
-    tasks: [
-      {
-        id: "3-1",
-        name: "UI Other screens",
-        assignee: "JD",
-        status: "todo" as const,
-        startDate: new Date(2025, 9, 25),
-        endDate: new Date(2025, 10, 7),
-      },
-      {
-        id: "3-2",
-        name: "Payment intergration",
-        assignee: "JD",
-        status: "todo" as const,
-        startDate: new Date(2025, 9, 25),
-        endDate: new Date(2025, 10, 7),
-      },
-    ],
-  },
-  {
-    id: "4",
-    name: "Internal CRM System",
-    taskCount: 8,
-    progress: 30,
-    startDate: new Date(2025, 9, 25),
-    endDate: new Date(2025, 10, 7),
-    tasks: [],
-  },
-  {
-    id: "5",
-    name: "Ecommerce website",
-    taskCount: 4,
-    progress: 55,
-    startDate: new Date(2025, 9, 25),
-    endDate: new Date(2025, 10, 7),
-    tasks: [],
-  },
-]
+// projects imported from lib/data
 
 export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
   const [expandedProjects, setExpandedProjects] = useState<string[]>(["1", "3"])

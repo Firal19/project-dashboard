@@ -240,29 +240,31 @@ export function ViewOptionsPopover({ options, onChange }: ViewOptionsPopoverProp
                       onChange({ ...options, properties: newProps })
                     }}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
+                      "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs transition-colors",
                       options.properties.includes(prop.id)
-                        ? "border-foreground/20 bg-accent"
-                        : "border-border/60 hover:bg-accent",
+                        ? "border-border bg-background"
+                        : "border-border hover:bg-accent",
                     )}
                   >
                     <prop.icon className="h-3.5 w-3.5" />
                     {prop.label}
                   </button>
                 ))}
-                <button className="flex items-center justify-center rounded-full border border-dashed border-border/60 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent">
+                <button className="flex items-center justify-center rounded-md border border-dashed border-border/60 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent">
                   +
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Footer */}
           <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-4">
-            <button className="flex items-center gap-1.5 text-sm text-primary hover:underline">
-              <Globe className="h-4 w-4" />
-              Set default for everyone
-            </button>
+            <div className="flex items-center gap-1">
+              <button className="flex items-center gap-1.5 text-sm text-primary hover:underline">
+                <Globe className="h-4 w-4" />
+                Set default
+              </button>
+              <span className="text-sm text-muted-foreground">for everyone</span>
+            </div>
             <button className="text-sm text-primary hover:underline">Reset</button>
           </div>
         </div>

@@ -4,11 +4,16 @@ import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { FilterChip } from "@/components/filter-chip"
 import { ViewOptionsPopover } from "@/components/view-options-popover"
-import { Funnel, Link as LinkIcon, Plus, Sparkle } from "@phosphor-icons/react/dist/ssr"
+import { FilterPopover } from "@/components/filter-popover"
+import { ChipOverflow } from "@/components/chip-overflow"
+import { Link as LinkIcon, Plus, Sparkle } from "@phosphor-icons/react/dist/ssr"
+import type { FilterCounts } from "@/lib/data/projects"
 
 interface ProjectHeaderProps {
   filters: { key: string; value: string }[]
-  onRemoveFilter: (key: string) => void
+  onRemoveFilter: (key: string, value: string) => void
+  onFiltersChange: (chips: { key: string; value: string }[]) => void
+  counts?: FilterCounts
   viewOptions: {
     viewType: "list" | "board" | "timeline"
     tasks: "indented" | "collapsed" | "flat"
@@ -21,7 +26,7 @@ interface ProjectHeaderProps {
   onViewOptionsChange: (options: any) => void
 }
 
-export function ProjectHeader({ filters, onRemoveFilter, viewOptions, onViewOptionsChange }: ProjectHeaderProps) {
+export function ProjectHeader({ filters, onRemoveFilter, onFiltersChange, counts, viewOptions, onViewOptionsChange }: ProjectHeaderProps) {
   return (
     <header className="flex flex-col border-b border-border/40">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -42,17 +47,13 @@ export function ProjectHeader({ filters, onRemoveFilter, viewOptions, onViewOpti
 
       <div className="flex items-center justify-between px-4 pb-3 pt-3">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 gap-2 rounded-full border-border/60 px-3 bg-transparent">
-            <Funnel className="h-4 w-4" />
-            Filter
-          </Button>
-          {filters.map((filter) => (
-            <FilterChip
-              key={filter.key}
-              label={`${filter.key}: ${filter.value}`}
-              onRemove={() => onRemoveFilter(filter.key)}
-            />
-          ))}
+          <FilterPopover
+            initialChips={filters}
+            onApply={onFiltersChange}
+            onClear={() => onFiltersChange([])}
+            counts={counts}
+          />
+          <ChipOverflow chips={filters} onRemove={onRemoveFilter} maxVisible={6} />
         </div>
         <div className="flex items-center gap-2">
           <ViewOptionsPopover options={viewOptions} onChange={onViewOptionsChange} />
