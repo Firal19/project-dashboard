@@ -8,22 +8,15 @@ import { FilterPopover } from "@/components/filter-popover"
 import { ChipOverflow } from "@/components/chip-overflow"
 import { Link as LinkIcon, Plus, Sparkle } from "@phosphor-icons/react/dist/ssr"
 import type { FilterCounts } from "@/lib/data/projects"
+import type { FilterChip as FilterChipType, ViewOptions } from "@/lib/view-options"
 
 interface ProjectHeaderProps {
-  filters: { key: string; value: string }[]
+  filters: FilterChipType[]
   onRemoveFilter: (key: string, value: string) => void
-  onFiltersChange: (chips: { key: string; value: string }[]) => void
+  onFiltersChange: (chips: FilterChipType[]) => void
   counts?: FilterCounts
-  viewOptions: {
-    viewType: "list" | "board" | "timeline"
-    tasks: "indented" | "collapsed" | "flat"
-    ordering: "manual" | "alphabetical" | "date"
-    showAbsentParent: boolean
-    showClosedProjects: boolean
-    groupBy: "none" | "status" | "assignee" | "tags"
-    properties: string[]
-  }
-  onViewOptionsChange: (options: any) => void
+  viewOptions: ViewOptions
+  onViewOptionsChange: (options: ViewOptions) => void
 }
 
 export function ProjectHeader({ filters, onRemoveFilter, onFiltersChange, counts, viewOptions, onViewOptionsChange }: ProjectHeaderProps) {

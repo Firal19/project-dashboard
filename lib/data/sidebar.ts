@@ -1,5 +1,9 @@
+export type NavItemId = "inbox" | "my-tasks" | "projects" | "clients" | "performance"
+
+export type SidebarFooterItemId = "settings" | "templates" | "help"
+
 export type NavItem = {
-    id: string
+    id: NavItemId
     label: string
     badge?: number
     isActive?: boolean
@@ -13,7 +17,7 @@ export type ActiveProjectSummary = {
 }
 
 export type SidebarFooterItem = {
-    id: string
+    id: SidebarFooterItemId
     label: string
 }
 

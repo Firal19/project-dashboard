@@ -5,23 +5,17 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ProjectHeader } from "@/components/project-header"
 import { ProjectTimeline } from "@/components/project-timeline"
 import { computeFilterCounts, projects } from "@/lib/data/projects"
+import { DEFAULT_VIEW_OPTIONS, type FilterChip, type ViewOptions } from "@/lib/view-options"
+import { chipsToParams, paramsToChips } from "@/lib/url/filters"
 
 export function ProjectsContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const [viewOptions, setViewOptions] = useState({
-    viewType: "list" as "list" | "board" | "timeline",
-    tasks: "indented" as "indented" | "collapsed" | "flat",
-    ordering: "manual" as "manual" | "alphabetical" | "date",
-    showAbsentParent: false,
-    showClosedProjects: true,
-    groupBy: "none" as "none" | "status" | "assignee" | "tags",
-    properties: ["title", "status", "assignee", "dueDate"] as string[],
-  })
+  const [viewOptions, setViewOptions] = useState<ViewOptions>(DEFAULT_VIEW_OPTIONS)
 
-  const [filters, setFilters] = useState<{ key: string; value: string }[]>([])
+  const [filters, setFilters] = useState<FilterChip[]>([])
 
   const isSyncingRef = useRef(false)
   const prevParamsRef = useRef<string>("")
@@ -32,7 +26,7 @@ export function ProjectsContent() {
     replaceUrlFromChips(next)
   }
 
-  const applyFilters = (chips: { key: string; value: string }[]) => {
+  const applyFilters = (chips: FilterChip[]) => {
     setFilters(chips)
     replaceUrlFromChips(chips)
   }
@@ -50,13 +44,12 @@ export function ProjectsContent() {
     }
 
     prevParamsRef.current = currentParams
-    const params = new URLSearchParams(searchParams as any)
+    const params = new URLSearchParams(searchParams.toString())
     const chips = paramsToChips(params)
     setFilters(chips)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  const replaceUrlFromChips = (chips: { key: string; value: string }[]) => {
+  const replaceUrlFromChips = (chips: FilterChip[]) => {
     const params = chipsToParams(chips)
     const qs = params.toString()
     const url = qs ? `${pathname}?${qs}` : pathname
@@ -76,47 +69,7 @@ export function ProjectsContent() {
         viewOptions={viewOptions}
         onViewOptionsChange={setViewOptions}
       />
-      <ProjectTimeline viewOptions={viewOptions} />
+      <ProjectTimeline />
     </div>
   )
-}
-
-// Helpers: URL sync
-function chipsToParams(chips: { key: string; value: string }[]) {
-  const params = new URLSearchParams()
-  const buckets: Record<string, string[]> = {}
-  for (const c of chips) {
-    const k = normalizeKey(c.key)
-    buckets[k] = buckets[k] || []
-    buckets[k].push(c.value)
-  }
-  Object.entries(buckets).forEach(([k, arr]) => {
-    if (arr.length) params.set(k, arr.join(","))
-  })
-  return params
-}
-
-function normalizeKey(k: string) {
-  const s = k.trim().toLowerCase()
-  if (s.startsWith("status")) return "status"
-  if (s.startsWith("priority")) return "priority"
-  if (s.startsWith("tag")) return "tags"
-  if (s.startsWith("member") || s === "pic") return "members"
-  return s
-}
-
-function paramsToChips(params: URLSearchParams) {
-  const chips: { key: string; value: string }[] = []
-  const add = (key: string, values?: string | null) => {
-    if (!values) return
-    values.split(",").forEach((v) => {
-      if (!v) return
-      chips.push({ key, value: v })
-    })
-  }
-  add("Status", params.get("status"))
-  add("Priority", params.get("priority"))
-  add("Tag", params.get("tags"))
-  add("Member", params.get("members"))
-  return chips
 }

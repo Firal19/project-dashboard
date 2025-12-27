@@ -29,9 +29,9 @@ import {
   CaretRight,
   CaretUpDown,
 } from "@phosphor-icons/react/dist/ssr"
-import { activeProjects, footerItems, navItems } from "@/lib/data/sidebar"
+import { activeProjects, footerItems, navItems, type NavItemId, type SidebarFooterItemId } from "@/lib/data/sidebar"
 
-const navItemIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+const navItemIcons: Record<NavItemId, React.ComponentType<{ className?: string }>> = {
   inbox: Tray,
   "my-tasks": CheckSquare,
   projects: Folder,
@@ -39,7 +39,7 @@ const navItemIcons: Record<string, React.ComponentType<{ className?: string }>> 
   performance: ChartBar,
 }
 
-const footerItemIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+const footerItemIcons: Record<SidebarFooterItemId, React.ComponentType<{ className?: string }>> = {
   settings: Gear,
   templates: Layout,
   help: Question,

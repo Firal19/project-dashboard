@@ -10,7 +10,7 @@ import {
   subWeeks,
   startOfWeek,
   format,
-  isToday,
+  isSameDay,
 } from "date-fns"
 import {
   CaretLeft,
@@ -26,29 +26,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 
-interface ViewOptions {
-  viewType: "list" | "board" | "timeline"
-  tasks: "indented" | "collapsed" | "flat"
-  ordering: "manual" | "alphabetical" | "date"
-  showAbsentParent: boolean
-  showClosedProjects: boolean
-  groupBy: "none" | "status" | "assignee" | "tags"
-  properties: string[]
-}
-
-interface ProjectTimelineProps {
-  viewOptions: ViewOptions
-}
+// Fixed "today" so the demo stays visually consistent over time.
+// This controls the initial viewport and the vertical "today" line.
+const FIXED_TODAY = new Date(2024, 0, 23) // 23 Jan 2024
 
 // projects imported from lib/data
 
-export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
+export function ProjectTimeline() {
   const [projects, setProjects] = useState(initialProjects)
-  const [expandedProjects, setExpandedProjects] = useState<string[]>(initialProjects.map(p => p.id))
+  const [expandedProjects, setExpandedProjects] = useState<string[]>(initialProjects.map((p) => p.id))
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [viewMode, setViewMode] = useState<"Day" | "Week" | "Month" | "Quarter">("Day")
+  const [viewMode, setViewMode] = useState<"Day" | "Week" | "Month" | "Quarter">("Week")
   const [zoom, setZoom] = useState(1)
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [editDialog, setEditDialog] = useState<{
     isOpen: boolean
     type: "project" | "task" | null
@@ -57,7 +46,11 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
   }>({ isOpen: false, type: null, projectId: null, taskId: null })
   const [editStartDate, setEditStartDate] = useState("")
   const [editEndDate, setEditEndDate] = useState("")
-  const [viewStartDate, setViewStartDate] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }))
+  // Start the visible range one week before the week of FIXED_TODAY
+  // so the "today" line is not too close to the name column.
+  const [viewStartDate, setViewStartDate] = useState(
+    () => startOfWeek(addWeeks(FIXED_TODAY, -1), { weekStartsOn: 1 }),
+  )
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const nameColRef = useRef<HTMLDivElement>(null)
   const shouldAutoScrollToTodayRef = useRef(true)
@@ -71,11 +64,9 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
   }>({
     isOpen: false,
     message: "",
-    onConfirm: () => {},
-    onCancel: () => {},
+    onConfirm: () => { },
+    onCancel: () => { },
   })
-
-  void viewOptions
 
   const viewModes = useMemo(() => ["Day", "Week", "Month", "Quarter"] as const, [])
 
@@ -87,7 +78,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
 
   const goToToday = () => {
     shouldAutoScrollToTodayRef.current = true
-    setViewStartDate(startOfWeek(new Date(), { weekStartsOn: 1 }))
+    setViewStartDate(startOfWeek(addWeeks(FIXED_TODAY, -1), { weekStartsOn: 1 }))
   }
 
   const navigateTime = (direction: "prev" | "next") => {
@@ -125,10 +116,9 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
     return () => ro.disconnect()
   }, [])
 
-  // Calculate today line position
+  // Calculate today line position (based on fixed demo date)
   useEffect(() => {
-    const today = new Date()
-    const offset = differenceInCalendarDays(today, dates[0])
+    const offset = differenceInCalendarDays(FIXED_TODAY, dates[0])
     if (offset < 0 || offset >= dates.length) {
       setTodayOffsetDays(null)
       return
@@ -233,7 +223,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
     )
   }
 
-  const showConfirmDialog = (message: string, onConfirm: () => void, onCancel: () => void = () => {}) => {
+  const showConfirmDialog = (message: string, onConfirm: () => void, onCancel: () => void = () => { }) => {
     setConfirmDialog({
       isOpen: true,
       message,
@@ -251,8 +241,8 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
     setConfirmDialog({
       isOpen: false,
       message: "",
-      onConfirm: () => {},
-      onCancel: () => {},
+      onConfirm: () => { },
+      onCancel: () => { },
     })
   }
 
@@ -283,10 +273,10 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
           endDate: newEnd,
           tasks: shouldMoveChildren
             ? p.tasks.map((t) => ({
-                ...t,
-                startDate: addDays(t.startDate, diff),
-                endDate: addDays(t.endDate, diff),
-              }))
+              ...t,
+              startDate: addDays(t.startDate, diff),
+              endDate: addDays(t.endDate, diff),
+            }))
             : p.tasks,
         }
       }),
@@ -345,7 +335,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
 
     const [isDragging, setIsDragging] = useState(false)
     const [dragOffset, setDragOffset] = useState(0)
-    const [dragType, setDragType] = useState<'move' | 'resize-left' | 'resize-right' | null>(null)
+    const [dragType, setDragType] = useState<"move" | "resize-left" | "resize-right" | null>(null)
 
     const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
       e.preventDefault()
@@ -354,11 +344,11 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
 
       const rect = e.currentTarget.getBoundingClientRect()
       const offsetX = e.clientX - rect.left
-      const dragType = offsetX < 8 ? 'resize-left' : offsetX > rect.width - 8 ? 'resize-right' : 'move'
-      setDragType(dragType)
+      const dragKind = offsetX < 8 ? "resize-left" : offsetX > rect.width - 8 ? "resize-right" : "move"
+      setDragType(dragKind)
 
       const startX = e.clientX
-      document.body.style.cursor = dragType === 'move' ? 'grabbing' : 'col-resize'
+      document.body.style.cursor = dragKind === "move" ? "grabbing" : "col-resize"
 
       const handlePointerMove = (moveEvent: PointerEvent) => {
         setDragOffset(moveEvent.clientX - startX)
@@ -369,14 +359,14 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
         const daysMoved = Math.round(deltaX / cellWidth)
 
         if (daysMoved !== 0) {
-          if (dragType === 'move') {
+          if (dragKind === "move") {
             onUpdateStart(item.id, addDays(item.startDate, daysMoved))
-          } else if (dragType === 'resize-left' && onUpdateDuration) {
+          } else if (dragKind === "resize-left" && onUpdateDuration) {
             const newStartDate = addDays(item.startDate, daysMoved)
             if (newStartDate < item.endDate) {
               onUpdateDuration(item.id, newStartDate, item.endDate)
             }
-          } else if (dragType === 'resize-right' && onUpdateDuration) {
+          } else if (dragKind === "resize-right" && onUpdateDuration) {
             const newEndDate = addDays(item.endDate, daysMoved)
             if (newEndDate > item.startDate) {
               onUpdateDuration(item.id, item.startDate, newEndDate)
@@ -396,7 +386,22 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
       window.addEventListener("pointerup", handlePointerUp)
     }
 
-    const visualLeft = left + (isDragging ? dragOffset : 0)
+    let visualLeft = left
+    let visualWidth = width
+
+    if (isDragging && dragType) {
+      if (dragType === "move") {
+        // Move: shift the whole bar horizontally.
+        visualLeft = left + dragOffset
+      } else if (dragType === "resize-right") {
+        // Resize from the right: keep the left edge fixed, adjust width.
+        visualWidth = Math.max(cellWidth, width + dragOffset)
+      } else if (dragType === "resize-left") {
+        // Resize from the left: move the left edge, keep the right edge visually anchored.
+        visualLeft = left + dragOffset
+        visualWidth = Math.max(cellWidth, width - dragOffset)
+      }
+    }
     const dateLabel = `${format(item.startDate, "d/M")} - ${format(item.endDate, "d/M")}`
 
     const taskColors =
@@ -417,7 +422,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
         )}
         style={{
           left: `${visualLeft}px`,
-          width: `${Math.max(width, 50)}px`,
+          width: `${Math.max(visualWidth, 50)}px`,
           transition: isDragging ? "none" : "left 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
         }}
       >
@@ -430,7 +435,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
         />
 
         {variant === "task" && <div className="w-0.5 h-4 bg-current/50 rounded-full shrink-0" />}
-        <span className="text-xs font-medium tracking-[0.0923px] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
+        <span className="text-sm font-medium tracking-[0.0923px] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
           {dateLabel}: {item.name}
         </span>
         {variant === "task" && <div className="w-0.5 h-4 bg-current/50 rounded-full shrink-0 ml-auto" />}
@@ -572,7 +577,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
                             <span
                               className={cn(
                                 "block text-xs whitespace-nowrap leading-none",
-                                isToday(day) ? "text-primary font-semibold" : "text-muted-foreground",
+                                isSameDay(day, FIXED_TODAY) ? "text-primary font-semibold" : "text-muted-foreground",
                               )}
                             >
                               {label}
@@ -609,7 +614,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
                           <div className={cn("transition-transform", expandedProjects.includes(project.id) ? "rotate-0" : "-rotate-90")}>
                             <CaretDown className="h-4 w-4 text-muted-foreground" />
                           </div>
-                          <span className="font-medium text-sm truncate">{project.name}</span>
+                          <span className="font-semibold text-md truncate">{project.name}</span>
                           <span className="ml-1 text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 shrink-0">
                             {project.taskCount}
                           </span>
@@ -659,7 +664,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
                             isSidebarOpen ? "w-[280px] lg:w-[320px]" : "w-0 overflow-hidden border-none",
                           )}
                         >
-                          <div className={cn("h-[54px] w-full flex items-center gap-2 pl-10 pr-4", isSidebarOpen ? "" : "px-0")}> 
+                          <div className={cn("h-[54px] w-full flex items-center gap-2 pl-10 pr-4", isSidebarOpen ? "" : "px-0")}>
                             <Checkbox
                               checked={task.status === "done"}
                               onCheckedChange={(_checked: boolean) => toggleTaskStatus(project.id, task.id)}
@@ -669,7 +674,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
                               )}
                             />
                             <div className="flex flex-col flex-1 min-w-0">
-                              <span className={cn("text-sm truncate", task.status === "done" && "line-through text-muted-foreground")}>
+                              <span className={cn("text-md truncate", task.status === "done" && "line-through text-muted-foreground")}>
                                 {task.name}
                               </span>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -754,7 +759,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
                 )}
                 <div className="flex flex-col flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm truncate">{project.name}</span>
+                    <span className="font-semibold text-base truncate">{project.name}</span>
                     <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 shrink-0">
                       {project.taskCount}
                     </span>
@@ -782,7 +787,7 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
                         )}
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm">{task.name}</div>
+                        <div className="text-md">{task.name}</div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                           <span>{task.assignee}</span>
                           <span>•</span>
@@ -809,13 +814,13 @@ export function ProjectTimeline({ viewOptions }: ProjectTimelineProps) {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label htmlFor="item-name" className="text-sm font-medium">Name {editDialog.type === "project" ? "(Project)" : "(Task)"}</label>
-              <Input 
-                id="item-name" 
+              <Input
+                id="item-name"
                 value={editDialog.type === "project"
                   ? projects.find(p => p.id === editDialog.projectId)?.name || ''
                   : projects.find(p => p.id === editDialog.projectId)?.tasks.find(t => t.id === editDialog.taskId)?.name || ''
-                } 
-                disabled 
+                }
+                disabled
                 className="bg-muted"
               />
             </div>
