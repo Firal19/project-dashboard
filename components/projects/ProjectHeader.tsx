@@ -57,9 +57,6 @@ export function ProjectHeader({ project, onEditProject }: ProjectHeaderProps) {
         <MetaChipsRow items={metaItems} />
       </div>
 
-      <Separator className="my-5" />
-
-      <p className="text-sm leading-6 text-muted-foreground">{project.description}</p>
     </section>
   )
 }

@@ -18,6 +18,7 @@ import { ProjectWizard } from "@/components/project-wizard/ProjectWizard"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 
 type ProjectDetailsPageProps = {
@@ -125,12 +126,52 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
                 : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0px)]")
             }
           >
-            <div className="space-y-10 pt-4">
+            <div className="space-y-6 pt-4">
               <ProjectHeader project={project} onEditProject={openWizard} />
-              <ScopeColumns scope={project.scope} />
-              <OutcomesList outcomes={project.outcomes} />
-              <KeyFeaturesColumns features={project.keyFeatures} />
-              <TimelineGantt tasks={project.timelineTasks} />
+
+              <Tabs defaultValue="overview">
+                <TabsList className="w-full gap-6">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="workstream">Workstream</TabsTrigger>
+                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                  <TabsTrigger value="notes">Notes</TabsTrigger>
+                  <TabsTrigger value="assets">Assets &amp; Files</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="overview">
+                  <div className="space-y-10">
+                    <p className="text-sm leading-6 text-muted-foreground">{project.description}</p>
+                    <ScopeColumns scope={project.scope} />
+                    <OutcomesList outcomes={project.outcomes} />
+                    <KeyFeaturesColumns features={project.keyFeatures} />
+                    <TimelineGantt tasks={project.timelineTasks} />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="workstream">
+                  <div className="rounded-lg border border-dashed border-border/70 bg-muted/30 px-4 py-10 text-center text-sm text-muted-foreground">
+                    Workstream view is upcoming.
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="tasks">
+                  <div className="rounded-lg border border-dashed border-border/70 bg-muted/30 px-4 py-10 text-center text-sm text-muted-foreground">
+                    Tasks view is upcoming.
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="notes">
+                  <div className="rounded-lg border border-dashed border-border/70 bg-muted/30 px-4 py-10 text-center text-sm text-muted-foreground">
+                    Notes are upcoming.
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="assets">
+                  <div className="rounded-lg border border-dashed border-border/70 bg-muted/30 px-4 py-10 text-center text-sm text-muted-foreground">
+                    Assets &amp; Files section is upcoming.
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
 
             <AnimatePresence initial={false}>
