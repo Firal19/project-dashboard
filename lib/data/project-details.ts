@@ -2,6 +2,12 @@ import type { Project as ProjectListItem } from "@/lib/data/projects"
 import { projects } from "@/lib/data/projects"
 import { getAvatarUrl } from "@/lib/assets/avatars"
 
+function addDays(base: Date, days: number): Date {
+  const d = new Date(base)
+  d.setDate(d.getDate() + days)
+  return d
+}
+
 export type User = {
   id: string
   name: string
@@ -132,6 +138,7 @@ function userFromName(name: string, role?: string): User {
 
 function baseDetailsFromListItem(p: ProjectListItem): ProjectDetails {
   const picUsers = p.members.length ? p.members.map((n) => userFromName(n, "PIC")) : [userFromName("Jason Duong", "PIC")]
+  const today = new Date()
 
   return {
     id: p.id,
@@ -167,6 +174,7 @@ function baseDetailsFromListItem(p: ProjectListItem): ProjectDetails {
             dueLabel: "Today",
             dueTone: "muted",
             assignee: picUsers[0],
+            startDate: today,
           },
           {
             id: `${p.id}-ws-1-t2`,
@@ -175,11 +183,13 @@ function baseDetailsFromListItem(p: ProjectListItem): ProjectDetails {
             dueLabel: "Tomorrow",
             dueTone: "warning",
             assignee: picUsers[0],
+            startDate: addDays(today, 1),
           },
           {
             id: `${p.id}-ws-1-t3`,
             name: "Collect existing assets",
             status: "todo",
+            startDate: addDays(today, 2),
           },
         ],
       },
@@ -191,11 +201,13 @@ function baseDetailsFromListItem(p: ProjectListItem): ProjectDetails {
             id: `${p.id}-ws-2-t1`,
             name: "Draft wireframes",
             status: "todo",
+            startDate: addDays(today, 3),
           },
           {
             id: `${p.id}-ws-2-t2`,
             name: "Review with team",
             status: "todo",
+            startDate: addDays(today, 4),
           },
         ],
       },
@@ -303,6 +315,7 @@ export function getProjectDetailsById(id: string): ProjectDetails {
     ]
 
     const primaryAssignee = details.backlog.picUsers[0]
+    const today = new Date()
 
     details.workstreams = [
       {
@@ -316,6 +329,7 @@ export function getProjectDetailsById(id: string): ProjectDetails {
             dueLabel: "Today",
             dueTone: "muted",
             assignee: primaryAssignee,
+            startDate: today,
           },
           {
             id: "1-ws-1-t2",
@@ -324,6 +338,7 @@ export function getProjectDetailsById(id: string): ProjectDetails {
             dueLabel: "Today",
             dueTone: "danger",
             assignee: primaryAssignee,
+            startDate: today,
           },
           {
             id: "1-ws-1-t3",
@@ -332,12 +347,14 @@ export function getProjectDetailsById(id: string): ProjectDetails {
             dueLabel: "Tomorrow",
             dueTone: "warning",
             assignee: primaryAssignee,
+            startDate: addDays(today, 1),
           },
           {
             id: "1-ws-1-t4",
             name: "Track client signature",
             status: "todo",
             assignee: primaryAssignee,
+            startDate: addDays(today, 2),
           },
         ],
       },
@@ -352,18 +369,21 @@ export function getProjectDetailsById(id: string): ProjectDetails {
             dueLabel: "This week",
             dueTone: "muted",
             assignee: primaryAssignee,
+            startDate: addDays(today, 2),
           },
           {
             id: "1-ws-2-t2",
             name: "Configure sandbox account",
             status: "todo",
             assignee: primaryAssignee,
+            startDate: addDays(today, 3),
           },
           {
             id: "1-ws-2-t3",
             name: "Schedule onboarding session",
             status: "todo",
             assignee: primaryAssignee,
+            startDate: addDays(today, 4),
           },
         ],
       },
@@ -376,12 +396,14 @@ export function getProjectDetailsById(id: string): ProjectDetails {
             name: "Prepare low-fidelity wireframes",
             status: "todo",
             assignee: primaryAssignee,
+            startDate: addDays(today, 3),
           },
           {
             id: "1-ws-3-t2",
             name: "Review with stakeholders",
             status: "todo",
             assignee: primaryAssignee,
+            startDate: addDays(today, 4),
           },
         ],
       },
@@ -394,6 +416,7 @@ export function getProjectDetailsById(id: string): ProjectDetails {
             name: "Prepare clickable prototype",
             status: "todo",
             assignee: primaryAssignee,
+            startDate: addDays(today, 4),
           },
         ],
       },
@@ -406,6 +429,7 @@ export function getProjectDetailsById(id: string): ProjectDetails {
             name: "Collect feedback from stakeholders",
             status: "todo",
             assignee: primaryAssignee,
+            startDate: addDays(today, 5),
           },
         ],
       },

@@ -26,6 +26,8 @@ interface TaskQuickCreateModalProps {
   onClose: () => void
   context?: CreateTaskContext
   onTaskCreated?: (task: ProjectTask) => void
+  editingTask?: ProjectTask
+  onTaskUpdated?: (task: ProjectTask) => void
 }
 
 type TaskStatusId = 'todo' | 'in-progress' | 'done'
@@ -45,7 +47,7 @@ type PriorityOption = {
   label: string
 }
 
-type TagOption = {
+export type TagOption = {
   id: string
   label: string
 }
@@ -70,7 +72,7 @@ const PRIORITY_OPTIONS: PriorityOption[] = [
   { id: 'high', label: 'High' },
 ]
 
-const TAG_OPTIONS: TagOption[] = [
+export const TAG_OPTIONS: TagOption[] = [
   { id: 'feature', label: 'Feature' },
   { id: 'bug', label: 'Bug' },
   { id: 'internal', label: 'Internal' },
@@ -96,7 +98,7 @@ function getWorkstreamsForProject(projectId: string | undefined): { id: string; 
   return (details.workstreams ?? []).map((ws) => ({ id: ws.id, label: ws.name }))
 }
 
-export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated }: TaskQuickCreateModalProps) {
+export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated, editingTask, onTaskUpdated }: TaskQuickCreateModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState<string | undefined>(undefined)
   const [createMore, setCreateMore] = useState(false)
@@ -115,6 +117,42 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated }: 
 
   useEffect(() => {
     if (!open) return
+
+    if (editingTask) {
+      setProjectId(editingTask.projectId)
+      setWorkstreamId(editingTask.workstreamId)
+      setWorkstreamName(editingTask.workstreamName)
+
+      setTitle(editingTask.name)
+      setDescription(editingTask.description)
+      setCreateMore(false)
+      setIsDescriptionExpanded(false)
+
+      if (editingTask.assignee) {
+        const assigneeOption = ASSIGNEE_OPTIONS.find((a) => a.name === editingTask.assignee?.name)
+        setAssignee(assigneeOption ?? ASSIGNEE_OPTIONS[0])
+      } else {
+        setAssignee(ASSIGNEE_OPTIONS[0])
+      }
+
+      const statusOption = STATUS_OPTIONS.find((s) => s.id === editingTask.status)
+      setStatus(statusOption ?? STATUS_OPTIONS[0])
+
+      setStartDate(editingTask.startDate ?? new Date())
+      setTargetDate(undefined)
+
+      const priorityOption = editingTask.priority
+        ? PRIORITY_OPTIONS.find((p) => p.id === editingTask.priority)
+        : undefined
+      setPriority(priorityOption ?? PRIORITY_OPTIONS[0])
+
+      const tagOption = editingTask.tag
+        ? TAG_OPTIONS.find((t) => t.label === editingTask.tag)
+        : undefined
+      setSelectedTag(tagOption)
+
+      return
+    }
 
     const defaultProjectId = context?.projectId
     setProjectId(defaultProjectId)
@@ -135,7 +173,7 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated }: 
     setTargetDate(undefined)
     setPriority(PRIORITY_OPTIONS[0])
     setSelectedTag(undefined)
-  }, [open, context?.projectId, context?.workstreamId, context?.workstreamName])
+  }, [open, context?.projectId, context?.workstreamId, context?.workstreamName, editingTask])
 
   const projectOptions = useMemo(
     () => projects.map((p) => ({ id: p.id, label: p.name })),
@@ -167,7 +205,35 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated }: 
 
   if (!open) return null
 
-  const handleCreate = () => {
+  const handleSubmit = () => {
+    if (editingTask) {
+      const effectiveProjectId = projectId ?? editingTask.projectId
+      const project: Project | undefined = effectiveProjectId
+        ? projects.find((p) => p.id === effectiveProjectId)
+        : undefined
+
+      const updatedTask: ProjectTask = {
+        ...editingTask,
+        name: title.trim() || 'Untitled task',
+        status: status.id,
+        dueLabel: targetDate ? format(targetDate, 'dd/MM/yyyy') : editingTask.dueLabel,
+        assignee: toUser(assignee),
+        startDate,
+        priority: priority?.id,
+        tag: selectedTag?.label,
+        description,
+        projectId: effectiveProjectId ?? editingTask.projectId,
+        projectName: project?.name ?? editingTask.projectName,
+        workstreamId: workstreamId ?? editingTask.workstreamId,
+        workstreamName: workstreamName ?? editingTask.workstreamName,
+      }
+
+      onTaskUpdated?.(updatedTask)
+      toast.success("Task updated successfully")
+      onClose()
+      return
+    }
+
     const effectiveProjectId = projectId ?? projects[0]?.id
     if (!effectiveProjectId) return
 
@@ -221,7 +287,7 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated }: 
         onKeyDown={(e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
             e.preventDefault()
-            handleCreate()
+            handleSubmit()
           }
         }}
       >
@@ -240,7 +306,9 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated }: 
                   </div>
                 )}
                 trigger={
-                  <button className="bg-background flex gap-2 h-7 items-center px-2 py-1 rounded-lg border border-background hover:border-primary/50 transition-colors text-xs">
+                  <button
+                    className="bg-background flex gap-2 h-7 items-center px-2 py-1 rounded-lg border border-background hover:border-primary/50 transition-colors text-xs disabled:opacity-60"
+                  >
                     <Folder className="size-4 text-muted-foreground" />
                     <span className="truncate max-w-[160px] font-medium text-foreground">
                       {projectLabel ?? 'Choose project'}
@@ -266,7 +334,9 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated }: 
                       </div>
                     )}
                     trigger={
-                      <button className="bg-background flex gap-2 h-7 items-center px-2 py-1 rounded-lg border border-background hover:border-primary/50 transition-colors text-xs">
+                      <button
+                        className="bg-background flex gap-2 h-7 items-center px-2 py-1 rounded-lg border border-background hover:border-primary/50 transition-colors text-xs disabled:opacity-60"
+                      >
                         <Rows className="size-4 text-muted-foreground" />
                         <span className="truncate max-w-[160px] font-medium text-foreground">
                           {workstreamName ?? 'Choose workstream'}
@@ -445,16 +515,18 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated }: 
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={createMore}
-                  onCheckedChange={(value) => setCreateMore(Boolean(value))}
-                />
-                <span className="text-sm font-medium text-foreground">Create more</span>
-              </div>
+              {!editingTask && (
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={createMore}
+                    onCheckedChange={(value) => setCreateMore(Boolean(value))}
+                  />
+                  <span className="text-sm font-medium text-foreground">Create more</span>
+                </div>
+              )}
 
-              <Button type="button" onClick={handleCreate} className="h-10 px-4 rounded-xl">
-                Create Task
+              <Button type="button" onClick={handleSubmit} className="h-10 px-4 rounded-xl">
+                {editingTask ? 'Save changes' : 'Create Task'}
               </Button>
             </div>
           </div>
