@@ -397,21 +397,13 @@ export function ClientsContent() {
                 </TableBody>
               </Table>
 
-              <div className="flex items-center justify-between border-t border-border bg-background px-4 py-2 text-xs text-muted-foreground">
-                <div>
-                  Page {currentPage} of {totalPages}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="h-7 w-7"
-                      onClick={() => goToPage(1)}
-                      disabled={currentPage === 1}
-                    >
-                      «
-                    </Button>
+              <div className="border-t border-border bg-background px-4 py-2 text-xs text-muted-foreground">
+                {/* Mobile pagination (simplified) */}
+                <div className="flex items-center justify-between gap-2 md:hidden">
+                  <div>
+                    Page {currentPage} of {totalPages}
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="icon-sm"
@@ -421,23 +413,9 @@ export function ClientsContent() {
                     >
                       ‹
                     </Button>
-                    {pageNumbers.map((p, idx) =>
-                      p === -1 ? (
-                        <span key={`ellipsis-${idx}`} className="px-1">
-                          ...
-                        </span>
-                      ) : (
-                        <Button
-                          key={p}
-                          variant={p === currentPage ? "outline" : "ghost"}
-                          size="sm"
-                          className="h-7 min-w-7 px-2 text-xs"
-                          onClick={() => goToPage(p)}
-                        >
-                          {p}
-                        </Button>
-                      ),
-                    )}
+                    <span className="min-w-6 text-center">
+                      {currentPage}
+                    </span>
                     <Button
                       variant="ghost"
                       size="icon-sm"
@@ -447,32 +425,87 @@ export function ClientsContent() {
                     >
                       ›
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="h-7 w-7"
-                      onClick={() => goToPage(totalPages)}
-                      disabled={currentPage === totalPages}
-                    >
-                      »
-                    </Button>
                   </div>
+                </div>
 
+                {/* Desktop / tablet pagination */}
+                <div className="hidden items-center justify-between md:flex">
+                  <div>
+                    Page {currentPage} of {totalPages}
+                  </div>
                   <div className="flex items-center gap-2">
-                    <span>Rows per page</span>
-                    <select
-                      className="h-7 rounded-md border border-border bg-background px-2 text-xs"
-                      value={pageSize}
-                      onChange={(e) => {
-                        const next = Number(e.target.value) || 7
-                        setPageSize(next)
-                        setPage(1)
-                      }}
-                    >
-                      <option value={7}>7</option>
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                    </select>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="h-7 w-7"
+                        onClick={() => goToPage(1)}
+                        disabled={currentPage === 1}
+                      >
+                        «
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="h-7 w-7"
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        ‹
+                      </Button>
+                      {pageNumbers.map((p, idx) =>
+                        p === -1 ? (
+                          <span key={`ellipsis-${idx}`} className="px-1">
+                            ...
+                          </span>
+                        ) : (
+                          <Button
+                            key={p}
+                            variant={p === currentPage ? "outline" : "ghost"}
+                            size="sm"
+                            className="h-7 min-w-7 px-2 text-xs"
+                            onClick={() => goToPage(p)}
+                          >
+                            {p}
+                          </Button>
+                        ),
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="h-7 w-7"
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        ›
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="h-7 w-7"
+                        onClick={() => goToPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                      >
+                        »
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span>Rows per page</span>
+                      <select
+                        className="h-7 rounded-md border border-border bg-background px-2 text-xs"
+                        value={pageSize}
+                        onChange={(e) => {
+                          const next = Number(e.target.value) || 7
+                          setPageSize(next)
+                          setPage(1)
+                        }}
+                      >
+                        <option value={7}>7</option>
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
