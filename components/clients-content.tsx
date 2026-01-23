@@ -20,6 +20,7 @@ import Link from "next/link"
 import { useMemo, useState } from "react"
 import { clients, getProjectCountForClient, type ClientStatus } from "@/lib/data/clients"
 import { ClientWizard } from "@/components/clients/ClientWizard"
+import { ClientDetailsDrawer } from "@/components/clients/ClientDetailsDrawer"
 
 function statusLabel(status: ClientStatus): string {
   if (status === "prospect") return "Prospect"
@@ -37,6 +38,7 @@ export function ClientsContent() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [pageSize, setPageSize] = useState(7)
   const [page, setPage] = useState(1)
+  const [activeClientId, setActiveClientId] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -296,8 +298,11 @@ export function ClientsContent() {
                             onCheckedChange={() => toggleSelectOne(client.id)}
                           />
                         </TableCell>
-                        <TableCell className="align-middle text-sm font-medium text-foreground">
-                          <Link href={`/clients/${client.id}`} className="flex items-center gap-3">
+                        <TableCell
+                          className="align-middle text-sm font-medium text-foreground cursor-pointer"
+                          onClick={() => setActiveClientId(client.id)}
+                        >
+                          <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
                               <AvatarFallback className="text-xs font-medium">
                                 {client.name
@@ -316,7 +321,7 @@ export function ClientsContent() {
                                   : client.industry || client.location || ""}
                               </span>
                             </div>
-                          </Link>
+                          </div>
                         </TableCell>
                         <TableCell className="align-middle text-sm">
                           {client.primaryContactName ? (
@@ -356,8 +361,12 @@ export function ClientsContent() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem asChild>
-                                <Link href={`/clients/${client.id}`}>View details</Link>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setActiveClientId(client.id)
+                                }}
+                              >
+                                Quick view
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
@@ -365,6 +374,10 @@ export function ClientsContent() {
                                 }}
                               >
                                 Edit client
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem asChild>
+                                <Link href={`/clients/${client.id}`}>View full page</Link>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -470,6 +483,7 @@ export function ClientsContent() {
       {isWizardOpen && (
         <ClientWizard mode="create" onClose={() => setIsWizardOpen(false)} />
       )}
+      <ClientDetailsDrawer clientId={activeClientId} onClose={() => setActiveClientId(null)} />
     </div>
   )
 }
