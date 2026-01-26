@@ -41,7 +41,7 @@ export const projects: Project[] = [
     priority: "high",
     tags: ["frontend", "feature"],
     members: ["jason duong"],
-    client: "Acme Bank",
+    client: "Acme Corp",
     typeLabel: "MVP",
     durationLabel: "2 weeks",
     tasks: [
@@ -90,7 +90,7 @@ export const projects: Project[] = [
     priority: "medium",
     tags: ["backend"],
     members: ["jason duong"],
-    client: "Acme Corp Internal",
+    client: "Acme Corp",
     typeLabel: "Improvement",
     durationLabel: "2 weeks",
     tasks: [
@@ -155,7 +155,7 @@ export const projects: Project[] = [
     priority: "urgent",
     tags: ["feature", "urgent"],
     members: ["jason duong"],
-    client: "Acme Learning",
+    client: "HealthPlus",
     typeLabel: "Revamp",
     durationLabel: "3 weeks",
     tasks: [
@@ -245,7 +245,7 @@ export const projects: Project[] = [
     priority: "medium",
     tags: ["frontend"],
     members: ["jason duong"],
-    client: "Acme Retail",
+    client: "Shopline Retail",
     typeLabel: "Audit",
     durationLabel: "1 week",
     tasks: [
@@ -302,7 +302,7 @@ export const projects: Project[] = [
     priority: "medium",
     tags: ["frontend", "feature"],
     members: ["jason duong"],
-    client: "Acme Marketing",
+    client: "Atlas Logistics",
     typeLabel: "Phase 1",
     durationLabel: "2 weeks",
     tasks: [
@@ -392,7 +392,7 @@ export const projects: Project[] = [
     priority: "high",
     tags: ["feature", "urgent"],
     members: ["jason duong"],
-    client: "Acme SaaS",
+    client: "HealthPlus",
     typeLabel: "Experiment",
     durationLabel: "1 week",
     tasks: [
@@ -433,7 +433,7 @@ export const projects: Project[] = [
     priority: "medium",
     tags: ["frontend"],
     members: ["jason duong"],
-    client: "Acme Helpdesk",
+    client: "Atlas Logistics",
     typeLabel: "Revamp",
     durationLabel: "2 weeks",
     tasks: [
@@ -482,7 +482,7 @@ export const projects: Project[] = [
     priority: "low",
     tags: ["bug"],
     members: ["jason duong"],
-    client: "Acme Finance",
+    client: "Northwind Bank",
     typeLabel: "Polish",
     durationLabel: "3 days",
     tasks: [

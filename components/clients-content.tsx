@@ -4,9 +4,11 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,11 +16,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CaretRight, CaretUpDown, ArrowDown, ArrowUp, DotsThreeVertical, Plus, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr"
+import { CaretRight, CaretUpDown, ArrowDown, ArrowUp, DotsThreeVertical, Plus, MagnifyingGlass, Folder } from "@phosphor-icons/react/dist/ssr"
 import { toast } from "sonner"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { clients, getProjectCountForClient, type ClientStatus } from "@/lib/data/clients"
+import { projects } from "@/lib/data/projects"
 import { ClientWizard } from "@/components/clients/ClientWizard"
 import { ClientDetailsDrawer } from "@/components/clients/ClientDetailsDrawer"
 
@@ -29,6 +32,88 @@ function statusLabel(status: ClientStatus): string {
   return "Archived"
 }
 
+function ClientStatusBadge({ status }: { status: ClientStatus }) {
+  const label = statusLabel(status)
+
+  let badgeClasses = "bg-muted text-muted-foreground border-transparent"
+  let dotClasses = "bg-zinc-900"
+
+  if (status === "active") {
+    badgeClasses = "bg-teal-50 text-teal-700 border-transparent"
+    dotClasses = "bg-teal-600"
+  } else if (status === "on_hold") {
+    badgeClasses = "bg-amber-50 text-amber-700 border-transparent"
+    dotClasses = "bg-amber-600"
+  } else if (status === "archived") {
+    badgeClasses = "bg-slate-100 text-slate-600 border-transparent"
+    dotClasses = "bg-slate-500"
+  }
+
+  return (
+    <Badge
+      variant="outline"
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${badgeClasses}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${dotClasses}`} />
+      {label}
+    </Badge>
+  )
+}
+
+function ClientProjectsBadge({
+  active,
+  planned,
+  completed,
+}: {
+  active: number
+  planned: number
+  completed: number
+}) {
+  const badges = [
+    {
+      key: "active",
+      count: active,
+      label: "active projects",
+      iconClass: "text-teal-600",
+      wrapperClass: "text-muted-foreground",
+    },
+    {
+      key: "planned",
+      count: planned,
+      label: "planned projects",
+      iconClass: "text-amber-600",
+      wrapperClass: "text-muted-foreground",
+    },
+    {
+      key: "completed",
+      count: completed,
+      label: "completed projects",
+      iconClass: "text-muted-foreground/80",
+      wrapperClass: "text-muted-foreground/70",
+    },
+  ]
+
+  return (
+    <div className="flex justify-end gap-1.5">
+      {badges.map(({ key, count, label, iconClass, wrapperClass }) => (
+        <Tooltip key={key} delayDuration={200}>
+          <TooltipTrigger asChild>
+            <div
+              className={`inline-flex cursor-pointer items-center gap-1 rounded-sm bg-muted px-2 py-0.5 text-sm font-medium ${wrapperClass}`}
+            >
+              <Folder className={`h-4 w-4 ${iconClass}`} weight="regular" />
+              <span>{count}</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs font-medium">
+            {`${count} ${label}`}
+          </TooltipContent>
+        </Tooltip>
+      ))}
+    </div>
+  )
+}
+
 export function ClientsContent() {
   const [query, setQuery] = useState("")
   const [isWizardOpen, setIsWizardOpen] = useState(false)
@@ -36,7 +121,7 @@ export function ClientsContent() {
   const [sortKey, setSortKey] = useState<"name" | "projects">("name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [pageSize, setPageSize] = useState(7)
+  const [pageSize, setPageSize] = useState(10)
   const [page, setPage] = useState(1)
   const [activeClientId, setActiveClientId] = useState<string | null>(null)
 
@@ -167,27 +252,26 @@ export function ClientsContent() {
         </div>
 
         <div className="flex items-center justify-between px-4 pb-3 pt-3 gap-3 flex-wrap">
-          <div className="flex items-center gap-1 text-xs bg-muted rounded-lg px-2 py-1">
-            {[
-              { id: "all" as const, label: "All" },
-              { id: "active" as const, label: "Active" },
-              { id: "prospect" as const, label: "Prospect" },
-              { id: "on_hold" as const, label: "On hold" },
-              { id: "archived" as const, label: "Archived" },
-            ].map((tab) => {
-              const isActive = statusFilter === tab.id
-              return (
-                <Button
-                  key={tab.id}
-                  variant={isActive ? "ghost" : "ghost"}
-                  size="sm"
-                  className={`h-7 px-2 rounded-full text-xs ${isActive ? "bg-background" : ""}`}
-                  onClick={() => setStatusFilter(tab.id === "all" ? "all" : (tab.id as ClientStatus))}
-                >
-                  {tab.label}
-                </Button>
-              )
-            })}
+          <div className="flex-1 min-w-[260px]">
+            <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as "all" | ClientStatus)}>
+              <TabsList className="inline-flex bg-muted rounded-full px-1 py-0.5 text-xs border border-border/50 h-8">
+                {[
+                  { id: "all" as const, label: "All" },
+                  { id: "active" as const, label: "Active" },
+                  { id: "prospect" as const, label: "Prospect" },
+                  { id: "on_hold" as const, label: "On hold" },
+                  { id: "archived" as const, label: "Archived" },
+                ].map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className="h-7 px-3 rounded-full text-xs data-[state=active]:bg-background data-[state=active]:text-foreground"
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           </div>
 
           <div className="flex items-center gap-3 flex-1 justify-end">
@@ -256,9 +340,10 @@ export function ClientsContent() {
                         )}
                       </button>
                     </TableHead>
-                    <TableHead className="w-[20%] text-xs font-medium text-muted-foreground">Primary contact</TableHead>
+                    <TableHead className="w-[24%] text-xs font-medium text-muted-foreground">Company</TableHead>
+                    <TableHead className="w-[16%] text-xs font-medium text-muted-foreground">Industry</TableHead>
                     <TableHead className="w-[12%] text-xs font-medium text-muted-foreground">Status</TableHead>
-                    <TableHead className="w-[10%] text-xs font-medium text-muted-foreground text-right">
+                    <TableHead className="w-[14%] text-xs font-medium text-muted-foreground text-right">
                       <button
                         type="button"
                         className="inline-flex items-center gap-1 hover:text-foreground"
@@ -276,19 +361,32 @@ export function ClientsContent() {
                         )}
                       </button>
                     </TableHead>
-                    <TableHead className="min-w-[112px] text-xs font-medium text-muted-foreground whitespace-nowrap">
-                      Last activity
-                    </TableHead>
-                    <TableHead className="min-w-[128px] text-xs font-medium text-muted-foreground whitespace-nowrap">
-                      Owner
-                    </TableHead>
                     <TableHead className="w-[40px]" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {visibleClients.map((client) => {
-                    const projectCount = getProjectCountForClient(client.name)
                     const checked = selectedIds.has(client.id)
+                    const clientProjects = projects.filter((p) => p.client === client.name)
+                    let activeProjects = 0
+                    let plannedProjects = 0
+                    let completedProjects = 0
+
+                    for (const project of clientProjects) {
+                      if (project.status === "active") {
+                        activeProjects += 1
+                      } else if (project.status === "completed") {
+                        completedProjects += 1
+                      } else if (
+                        project.status === "planned" ||
+                        project.status === "backlog" ||
+                        project.status === "cancelled"
+                      ) {
+                        plannedProjects += 1
+                      }
+                    }
+
+                    const displayContactName = client.primaryContactName ?? client.name
                     return (
                       <TableRow key={client.id} className="hover:bg-muted/80">
                         <TableCell className="align-middle">
@@ -305,7 +403,7 @@ export function ClientsContent() {
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
                               <AvatarFallback className="text-xs font-medium">
-                                {client.name
+                                {displayContactName
                                   .split(" ")
                                   .map((part) => part.charAt(0))
                                   .join("")
@@ -314,40 +412,35 @@ export function ClientsContent() {
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col min-w-0">
-                              <span className="truncate">{client.name}</span>
-                              <span className="mt-0.5 text-[11px] text-muted-foreground truncate">
-                                {client.industry && client.location
-                                  ? `${client.industry} • ${client.location}`
-                                  : client.industry || client.location || ""}
-                              </span>
+                              <span className="truncate">{displayContactName}</span>
+                              {client.primaryContactEmail && (
+                                <span className="mt-0.5 text-[11px] text-muted-foreground truncate">
+                                  {client.primaryContactEmail}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="align-middle text-sm">
-                          {client.primaryContactName ? (
-                            <div className="flex flex-col">
-                              <span className="truncate text-sm text-foreground">{client.primaryContactName}</span>
-                              {client.primaryContactEmail && (
-                                <span className="truncate text-[11px] text-muted-foreground">{client.primaryContactEmail}</span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
+                          <div className="flex flex-col min-w-0">
+                            <span className="truncate text-sm text-foreground">{client.name}</span>
+                            {client.location && (
+                              <span className="truncate text-[11px] text-muted-foreground">{client.location}</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="align-middle text-sm text-muted-foreground">
+                          {client.industry ?? ""}
                         </TableCell>
                         <TableCell className="align-middle">
-                          <Badge variant="outline" className="rounded-full px-2 py-0.5 text-[11px] font-medium capitalize">
-                            {statusLabel(client.status)}
-                          </Badge>
+                          <ClientStatusBadge status={client.status} />
                         </TableCell>
                         <TableCell className="align-middle text-right text-sm text-muted-foreground">
-                          {projectCount}
-                        </TableCell>
-                        <TableCell className="align-middle text-sm text-muted-foreground whitespace-nowrap">
-                          {client.lastActivityLabel ?? "—"}
-                        </TableCell>
-                        <TableCell className="align-middle text-sm text-muted-foreground whitespace-nowrap">
-                          {client.owner ?? "—"}
+                          <ClientProjectsBadge
+                            active={activeProjects}
+                            planned={plannedProjects}
+                            completed={completedProjects}
+                          />
                         </TableCell>
                         <TableCell className="align-middle text-right">
                           <DropdownMenu>
@@ -357,7 +450,7 @@ export function ClientsContent() {
                                 size="icon-sm"
                                 className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
                               >
-                                <DotsThreeVertical className="h-4 w-4" weight="regular"  />
+                                <DotsThreeVertical className="h-4 w-4" weight="regular" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40">
@@ -496,13 +589,13 @@ export function ClientsContent() {
                         className="h-7 rounded-md border border-border bg-background px-2 text-xs"
                         value={pageSize}
                         onChange={(e) => {
-                          const next = Number(e.target.value) || 7
+                          const next = Number(e.target.value) || 10
                           setPageSize(next)
                           setPage(1)
                         }}
                       >
-                        <option value={7}>7</option>
                         <option value={10}>10</option>
+                        <option value={7}>7</option>
                         <option value={25}>25</option>
                       </select>
                     </div>
